@@ -537,8 +537,7 @@ function sys_reset(){
 
 # Permission detection
 if [ $UID -ne 0 ]; then
-	whiptail --title "Geekworm WORKSHOP" \
-	--msgbox "Superuser privileges are required to run this script.\ne.g. \"sudo $0\"" 10 60
+    printf "Superuser privileges are required to run this script.\ne.g. \"sudo %s\"\n" "$0"
     exit 1
 fi
 
