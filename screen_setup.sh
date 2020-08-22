@@ -346,143 +346,15 @@ function apply(){
 		disable_blanking
 		;;
 	esac
-	menu_reboot
+	echo "Please reboot."
 }
 
 function setup_22_24(){
-	while true
-	do
-		menu_22_24
-		case $? in
-			1)
-			DI_22_24=1
-			menu_outputdevice
-			case $? in
-				1)
-				DI_OUTPUTDEVICE=1
-				OUTPUT_DEVICE="TFT"
-				RESOLUTION="320x240"
-				;;
-				2)
-				DI_OUTPUTDEVICE=2
-				OUTPUT_DEVICE="BOTH"
-				RESOLUTION="640x480"
-				;;
-				3)
-				DI_OUTPUTDEVICE=3
-				;;
-			esac
-			;;
-			2)
-			DI_22_24=2
-			if [ "$OUTPUT_DEVICE" == "TFT" ]; then
-				RESOLUTION="320x240"
-			elif [ "$OUTPUT_DEVICE" == "BOTH" ]; then
-				menu_resolution
-				case $? in 
-					1)
-					DI_RESOLUTION=1
-					RESOLUTION="1024x768"
-					;;
-					2)
-					DI_RESOLUTION=2
-					RESOLUTION="800x600"
-					;;
-					3)
-					DI_RESOLUTION=3
-					RESOLUTION="640x480"
-					;;
-					4)
-					DI_RESOLUTION=4
-					RESOLUTION="320x240"
-					;;
-					5)
-					DI_RESOLUTION=5
-					;;
-				esac
-			else
-				RESOLUTION="Auto"
-			fi
-			;;
-			3)
-			DI_22_24=3
-			if [ "$OUTPUT_DEVICE" != "HDMI" ]; then
-				menu_rotate
-				case $? in 
-					1)
-					DI_ROTATE=1
-					ROTATE="0"
-					;;
-					2)
-					DI_ROTATE=2
-					ROTATE="90"
-					;;
-					3)
-					DI_ROTATE=3
-					ROTATE="180"
-					;;
-					4)
-					DI_ROTATE=4
-					ROTATE="270"
-					;;
-					5)
-					DI_ROTATE=5
-					;;
-				esac
-			fi
-			;;
-			4)
-			DI_22_24=4
-			menu_speed
-			case $? in
-				1)
-				DI_SPEED=1
-				SPEED="80000000"
-				;;
-				2)
-				DI_SPEED=2
-				SPEED="72000000"
-				;;
-				3)
-				DI_SPEED=3
-				SPEED="64000000"
-				;;
-				4)
-				DI_SPEED=4
-				SPEED="48000000"
-				;;
-				5)
-				DI_SPEED=5
-				;;
-			esac
-			;;
-			5)
-			DI_22_24=5
-			menu_blanking
-			case $? in 
-				1)
-				DI_BLANKING=1
-				SCREEN_BLANKING="Yes"
-				;;
-				2)
-				DI_BLANKING=2
-				SCREEN_BLANKING="No"
-				;;
-				3)
-				DI_BLANKING=3
-				;;
-			esac
-			;;
-			6)
-			DI_22_24=6
-			apply
-			;;
-			7)
-			DI_22_24=7
-			return
-			;;
-		esac
-	done
+  DI_OUTPUTDEVICE=1
+  OUTPUT_DEVICE="TFT"
+  RESOLUTION="320x240"
+  DI_22_24=6
+  apply
 }
 
 function generate_touch_24(){
@@ -670,56 +542,6 @@ if [ $UID -ne 0 ]; then
     exit 1
 fi
 
-#whiptail --title "$TITLE" --msgbox "Setup tools for ugeek screens.\nhttp://Geekworm.com" --backtitle "$BACKTITLE" 10 60
-while true
-do
-	menu_deviceselect
-	case $? in
-		1)
-		DI_DEVICESELECT=1
-		DEVICE="2.2"
-		setup_22_24
-		;;
-		2)
-		DI_DEVICESELECT=2
-		DEVICE="2.4"
-		setup_22_24
-		;;
-		3)
-		DI_DEVICESELECT=3
-		DEVICE="3.5"
-		if (whiptail --title "$TITLE" \
-			yes-button "Continue" \
-			no-button "Exit" \
-			yesno "Install 3.5\" screen?" 10 60) then
-		disable_35
-		enable_35
-		fi
-		menu_reboot
-		;;
-		4)
-		DI_DEVICESELECT=4
-		DEVICE="3.5t"
-		if (whiptail --title "$TITLE" \
-			yes-button "Continue" \
-			no-button "Exit" \
-			yesno "Install 3.5\" screen with touch?" 10 60) then
-		setup_35t
-		menu_reboot
-		else
-			exit 1
-		fi
-		;;
-		5)
-		DI_DEVICESELECT=5
-		sys_reset
-		menu_reboot
-		;;
-		6)
-		DI_DEVICESELECT=6
-		echo "     [ Geekworm WORKSHOP ]"
-		echo "http://Geekworm.com"		
-		exit 1
-		;;
-	esac
-done
+DI_DEVICESELECT=2
+DEVICE="2.4"
+setup_22_24
