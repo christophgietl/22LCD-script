@@ -1,5 +1,4 @@
 #!/bin/bash
-BLACKLIST="/etc/modprobe.d/raspi-blacklist.conf"
 CONFIG="/boot/config.txt"
 CMDLINE="/boot/cmdline.txt"
 FONT="ProFont6x11"
@@ -7,32 +6,17 @@ FBCP="/usr/local/bin/fbcp"
 SPEED="80000000"
 ROTATE="90"
 FPS="60"
-RESOLUTION="640x480"
+RESOLUTION="320x240"
 RESOLUTION_TEMP="640x480"
 HDMIGROUP="2"
 HDMIMODE="4"
 HDMICVT=""
-OUTPUT_DEVICE="BOTH"
+OUTPUT_DEVICE="TFT"
 SCREEN_BLANKING="No"
-TITLE="Geekworm WORKSHOP"
-BACKTITLE="Geekworm.com"
-DEVICE="2.2"
-TRANSFORM_24r0="0.988809 -0.023645 0.060523 -0.028817 1.003935 0.034176 0 0 1"
-TRANSFORM_24r90="0.014773 -1.132874 1.033662 1.118701 0.009656 -0.065273 0 0 1"
-TRANSFORM_24r180="-1.115235 -0.010589 1.057967 -0.005964 -1.107968 1.025780 0 0 1"
-TRANSFORM_24r270="-0.033192 1.126869 -0.014114 -1.115846 0.006580 1.050030 0 0 1"
-TRANSFORM=$TRANSFORM_24r270
+DEVICE="2.4"
 SOFTWARE_LIST="xserver-xorg-input-evdev xserver-xorg-input-libinput python-dev python-pip python-smbus python-wxgtk3.0 matchbox-keyboard"
 FILE_FBTURBO="/etc/X11/xorg.conf.d/99-fbturbo.conf"
-FILE_CALIBRATION="/etc/X11/xorg.conf.d/99-calibration.conf"
 XRANDRSETTINGS="/etc/X11/Xsession.d/45-custom_xrandr-settings"
-DI_OUTPUTDEVICE=1
-DI_RESOLUTION=1
-DI_ROTATE=1
-DI_SPEED=1
-DI_BLANKING=1
-DI_DEVICESELECT=1
-DI_22_24=1
 
 function check_sysreq(){
 	SOFT=$(dpkg -l $SOFTWARE_LIST | grep "un  ")
@@ -64,28 +48,11 @@ function enable_tft_config(){
 	
 }
 
-# Disable tft in config.txt
-function disable_tft_config(){
-	sed -i '/^dtparam=spi/d' $CONFIG
-	sed -i '/^dtparam=i2c_arm=/d' $CONFIG
-	sed -i '/^dtoverlay=pitft/d' $CONFIG
-	sed -i '/^hdmi_mode=/d' $CONFIG
-	sed -i '/^hdmi_group=/d' $CONFIG
-	sed -i '/^hdmi_cvt=/d' $CONFIG
-	sed -i '/^hdmi_force_hotplug=/d' $CONFIG
-}
-
 function enable_tft_cmdline(){
 	FBONCONFIGED=$(cat /boot/cmdline.txt | grep "fbcon=map:10")
 	if [ -z "$FBONCONFIGED" ]; then
 		sed -i -e 's/rootwait/rootwait fbcon=map:10 fbcon=font:'$FONT'/' $CMDLINE
 	fi
-}
-
-function disable_tft_cmdline(){
-	sed -i -e 's/fbcon=map:10 //' $CMDLINE
-	sed -i -e 's/fbcon=font:ProFont6x11 //' $CMDLINE
-	sed -i -e 's/fbcon=font:VGA8x8 //' $CMDLINE
 }
 
 function enable_blanking(){
@@ -123,12 +90,6 @@ function enable_both_x(){
 	echo "xrandr --output HDMI-1 --mode \"$RESOLUTION_TEMP\"" > $XRANDRSETTINGS
 }
 
-function disable_both_x(){
-	if [ -f "$XRANDRSETTINGS" ]; then
-		rm $XRANDRSETTINGS
-	fi
-}
-
 function disable_fbcp(){
 	sed -i '/^\/usr\/local\/bin\/fbcp/d' /etc/rc.local
 }
@@ -147,121 +108,6 @@ function enable_fbcp(){
 	fi
 	disable_fbcp
 	sed -i '/exit 0/i\/usr\/local\/bin\/fbcp &' /etc/rc.local
-}
-
-function menu_outputdevice(){
-	OPTION_OUTPUT=$(whiptail --title "OUTPUT DEVICE" \
-	--backtitle "$BACKTITLE" \
-	--nocancel \
-	--menu "OUTPUT DEVICE:$OUTPUT_DEVICE" \
-	--default-item "$DI_OUTPUTDEVICE" \
-	14 60 3 \
-	"1" "TFT" \
-	"2" "HDMI & TFT" \
-	"3" "Return" 3>&1 1>&2 2>&3)
-	return $OPTION_OUTPUT
-}
-
-function menu_resolution(){
-	OPTION_RES=$(whiptail --title "SCREEN RESOLUTION" \
-	--backtitle "$BACKTITLE" \
-	--nocancel \
-	--menu "Screen resolution:$RESOLUTION" \
-	--default-item "$DI_RESOLUTION" \
-	14 60 5 \
-	"1" "1024x768" \
-	"2" "800x600" \
-	"3" "640x480" \
-	"4" "320x240" \
-	"5" "Return" 3>&1 1>&2 2>&3)
-	return $OPTION_RES
-}
-
-function menu_rotate(){
-	OPTION_ROTATE=$(whiptail --title "SCREEN ROTATE" \
-	--menu "Screen rotate:$ROTATE°" \
-	--backtitle "$BACKTITLE" \
-	--nocancel \
-	--default-item "$DI_ROTATE" \
-	14 60 5 \
-	"1" "0°" \
-	"2" "90°" \
-	"3" "180°" \
-	"4" "270°" \
-	"5" "Return" 3>&1 1>&2 2>&3)
-	return $OPTION_ROTATE
-}
-function menu_speed(){
-	OPTION_ROTATE=$(whiptail --title "SPI SPEED" \
-	--menu "SPI bus speed:$SPEED°" \
-	--backtitle "$BACKTITLE" \
-	--nocancel \
-	--default-item "$DI_SPEED" \
-	14 60 5 \
-	"1" "80000000" \
-	"2" "72000000" \
-	"3" "64000000" \
-	"4" "64000000" \
-	"5" "Return" 3>&1 1>&2 2>&3)
-	return $OPTION_ROTATE
-}
-
-function menu_blanking(){
-	OPTION_BLANKING=$(whiptail --title "SCREEN BLANKING" \
-	--menu "Screen blanking:$SCREEN_BLANKING" \
-	--backtitle "$BACKTITLE" \
-	--nocancel \
-	--default-item "$DI_BLANKING" \
-	14 60 3 \
-	"1" "Enable" \
-	"2" "Disble" \
-	"3" "Return" 3>&1 1>&2 2>&3)
-	return $OPTION_BLANKING
-}
-
-function menu_reboot(){
-	if (whiptail --title "$TITLE" \
-		--yes-button "Reboot" \
-		--no-button "Exit" \
-		--yesno "Reboot system to apply new settings?" 10 60) then
-		reboot
-	else
-		exit 1
-	fi
-}
-
-function menu_deviceselect(){
-	OPTION=$(whiptail --title "$TITLE" \
-	--menu "Please select your device:" \
-	--backtitle "$BACKTITLE" \
-	--nocancel \
-	--default-item "$DI_DEVICESELECT" \
-	14 60 6 \
-	"1" "TFT 2.2\"" \
-	"2" "TFT 2.4\"" \
-	"3" "HD-TFT HAT 3.5\"" \
-	"4" "HD-TFT HAT 3.5\" With Touch" \
-	"5" "Reset RPi config to default" \
-	"6" "Exit."  3>&1 1>&2 2>&3)
-	return $OPTION
-}
-
-# Menu of parameter settings
-function menu_22_24(){
-	OPTION=$(whiptail --title "$TITLE" \
-	--menu "TFT $DEVICE Screen parameter settings:" \
-	--backtitle "$BACKTITLE" \
-	--nocancel \
-	--default-item "$DI_22_24" \
-	14 60 7 \
-	"1" "Output <$OUTPUT_DEVICE>." \
-	"2" "Resolution <$RESOLUTION>." \
-	"3" "Rotate <$ROTATE°>." \
-	"4" "SPI Speed <$SPEED>." \
-	"5" "Blanking <$SCREEN_BLANKING>." \
-	"6" "Apply new settings." \
-	"7" "Return."  3>&1 1>&2 2>&3)
-	return $OPTION
 }
 
 function apply_tft_22_24(){
@@ -349,198 +195,10 @@ function apply(){
 	echo "Please reboot."
 }
 
-function setup_22_24(){
-  DI_OUTPUTDEVICE=1
-  OUTPUT_DEVICE="TFT"
-  RESOLUTION="320x240"
-  DI_22_24=6
-  apply
-}
-
-function generate_touch_24(){
-	# generate calibration file according to the ratate
-	if [ ! -d "/etc/X11/xorg.conf.d/" ]; then
-		mkdir /etc/X11/xorg.conf.d
-	fi
-	case $ROTATE in
-		0)
-		TRANSFORM=$TRANSFORM_24r0
-		;;
-		90)
-		TRANSFORM=$TRANSFORM_24r90
-		;;
-		180)
-		TRANSFORM=$TRANSFORM_24r180
-		;;
-		270)
-		TRANSFORM=$TRANSFORM_24r270
-		;;
-	esac
-	cat << EOF > $FILE_CALIBRATION
-Section "InputClass"
-        Identifier "STMPE Touchscreen Calibration"
-        MatchProduct "stmpe"
-        MatchDevicePath "/dev/input/event*"
-        Driver "libinput"
-        Option "TransformationMatrix" "$TRANSFORM"
-EndSection
-EOF
-}
-
-function disable_35(){
-	echo "Disable screen!"
-	sed -i '/^dtoverlay=i2c-gpio/d' $CONFIG
-	sed -i '/^overscan_left=0/d' $CONFIG
-	sed -i '/^overscan_right=0/d' $CONFIG
-	sed -i '/^overscan_top=0/d' $CONFIG
-	sed -i '/^overscan_bottom=0/d' $CONFIG
-	sed -i '/^framebuffer_width=800/d' $CONFIG
-	sed -i '/^framebuffer_height=480/d' $CONFIG
-	sed -i '/^enable_dpi_lcd=1/d' $CONFIG
-	sed -i '/^display_default_lcd=1/d' $CONFIG
-	sed -i '/^dpi_group=2/d' $CONFIG
-	sed -i '/^dpi_mode=87/d' $CONFIG
-	sed -i '/^dpi_output_format=0x6f015/d' $CONFIG
-	sed -i '/^display_rotate=3/d' $CONFIG
-	sed -i '/^hdmi_timings=480 0 16 16 24 800 0 4 2 2 0 0 0 60 0 32000000 6/d' $CONFIG
-	sed -i '/^dtoverlay=dpi18/d' $CONFIG
-}
-
-function enable_35(){
-	echo "enable screen!"
-	cat << EOF >> $FILE_CONFIG
-dtoverlay=i2c-gpio
-overscan_left=0
-overscan_right=0
-overscan_top=0
-overscan_bottom=0
-framebuffer_width=800
-framebuffer_height=480
-enable_dpi_lcd=1
-display_default_lcd=1
-dpi_group=2
-dpi_mode=87
-dpi_output_format=0x6f015
-display_rotate=3
-hdmi_timings=480 0 16 16 24 800 0 4 2 2 0 0 0 60 0 32000000 6
-dtoverlay=ugeekrmp-gpio-backlight
-EOF
-}
-
-function disable_35t(){
-	echo "Disable screen!"
-	sed -i '/^dtparam=ugeekrmp/d' $CONFIG
-	sed -i '/^overscan_left=0/d' $CONFIG
-	sed -i '/^overscan_right=0/d' $CONFIG
-	sed -i '/^overscan_top=0/d' $CONFIG
-	sed -i '/^overscan_bottom=0/d' $CONFIG
-	sed -i '/^framebuffer_width=800/d' $CONFIG
-	sed -i '/^framebuffer_height=480/d' $CONFIG
-	sed -i '/^enable_dpi_lcd=1/d' $CONFIG
-	sed -i '/^display_default_lcd=1/d' $CONFIG
-	sed -i '/^dpi_group=2/d' $CONFIG
-	sed -i '/^dpi_mode=87/d' $CONFIG
-	sed -i '/^dpi_output_format=0x6f016/d' $CONFIG
-	sed -i '/^display_rotate=0/d' $CONFIG
-	sed -i '/^hdmi_timings=800 0 50 20 50 480 1 3 2 3 0 0 0 60 0 32000000 6/d' $CONFIG
-	sed -i '/^dtoverlay=ugeekrmp-gpio-backlight/d' $CONFIG
-	systemctl stop ugeekrmp-init
-	systemctl stop ugeekrmp-touch
-	systemctl disable ugeekrmp-init
-	systemctl disable ugeekrmp-touch
-	if [ -e "/usr/lib/systemd/system/ugeekrmp-init.service" ]; then
-		rm /usr/lib/systemd/system/ugeekrmp-init.service
-	fi
-	if [ -e "/usr/lib/systemd/system/ugeekrmp-touch.service" ]; then
-		rm /usr/lib/systemd/system/ugeekrmp-touch.service
-	fi
-	if [ -e "/usr/bin/ugeekrmp-init" ]; then
-		rm /usr/bin/ugeekrmp-init
-	fi
-	if [ -e "/usr/bin/ugeekrmp-touch" ]; then
-		/usr/bin/ugeekrmp-touch
-	fi
-}
-
-function enable_35t(){
-	echo "enable screen!"
-	cat << EOF >> $FILE_CONFIG
-dtoverlay=ugeekrmp
-overscan_left=0
-overscan_right=0
-overscan_top=0
-overscan_bottom=0
-framebuffer_width=800
-framebuffer_height=480
-enable_dpi_lcd=1
-display_default_lcd=1
-dpi_group=2
-dpi_mode=87
-dpi_output_format=0x6f016
-display_rotate=0
-hdmi_timings=800 0 50 20 50 480 1 3 2 3 0 0 0 60 0 32000000 6
-dtoverlay=ugeekrmp-gpio-backlight
-EOF
-	cp resources/ugeekrmp-init /usr/bin/
-	cp resources/ugeekrmp-touch /usr/bin/
-	cp configs/ugeekrmp-init.service /usr/lib/systemd/system
-	cp configs/ugeekrmp-touch.service /usr/lib/systemd/system
-	systemctl enable ugeekrmp-init
-	systemctl enable ugeekrmp-touch
-	systemctl start ugeekrmp-init
-	systemctl start ugeekrmp-touch
-}
-
-function setup_35t(){
-	echo "]Update System["
-	SOFT=$(dpkg -l $SOFTWARE_LIST | grep "<none>")
-	if [ -n "$SOFT" ]; then
-		apt update
-		apt -y install $SOFTWARE_LIST
-		echo "$SOFTWARE_LIST install complete."
-	else
-		echo "$SOFTWARE_LIST already exists."
-	fi
-	SOFT=$(dpkg -l python-evdev | grep "matching")
-	if [ -n "$SOFT" ]; then
-		dpkg -i resources/python-evdev_0.6.4-1_armhf.deb 
-		echo "python-evdev install complete."
-	else
-		echo "python-evdev already exists."
-	fi
-	SOFT=$( pip search evdev | grep "INSTALLED")
-	if [ -z "$SOFT" ]; then
-		pip install evdev
-		echo "python-evdev install complete!"
-	else
-		echo "python-evdev already exists."
-	fi
-	SOFT=$( pip search RPi.GPIO | grep "INSTALLED")
-	if [ -z "$SOFT" ]; then
-		pip install RPi.GPIO
-		echo "python-RPi.GPIO install complete!"
-	else
-		echo "python-RPi.GPIO already exists."
-	fi
-	disable_35t
-	enable_35t
-	menu_reboot
-}
-
-# Reset all settings to default
-function sys_reset(){
-	disable_tft_config
-	disable_tft_cmdline
-	disable_tft_x
-	disable_fbcp
-}
-
 # Permission detection
 if [ $UID -ne 0 ]; then
     printf "Superuser privileges are required to run this script.\ne.g. \"sudo %s\"\n" "$0"
     exit 1
 fi
 
-DI_DEVICESELECT=2
-DEVICE="2.4"
-setup_22_24
+apply
