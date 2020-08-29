@@ -11,4 +11,4 @@ It is based on the March 2020 version of the
 * https://geekworm.com
 * https://geekworm.aliexpress.com
 * https://www.amazon.com/shops/geekworm
-* https://web.archive.org/web/20190806084033/http://www.raspberrypiwiki.com/index.php/2.2_LCD
+* https://raspberrypiwiki.com/2.4_LCD
